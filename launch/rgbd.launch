@@ -1,0 +1,29 @@
+<launch>
+  <include file="$(find rgbd_launch)/launch/rgbd_camera.launch">
+    <arg name="camera" value="camera_rgb" />
+    <arg name="rgb_frame_id" value="uav1/rgbd/color_optical" />
+    <arg name="depth_frame_id" value="uav1/rgbd/aligned_depth_to_color_optical" />
+  </include>
+
+  <include file="$(find rgbd_launch)/launch/rgbd_camera.launch">
+    <arg name="camera" value="camera_depth" />
+    <arg name="rgb_frame_id" value="uav1/rgbd/color_optical" />
+    <arg name="depth_frame_id" value="uav1/rgbd/aligned_depth_to_color_optical" />
+  </include>
+
+  <node pkg="tf" type="static_transform_publisher" name="depth_to_rgb_transform" args="0 0 0 0 0 0 rgb_frame_id depth_frame_id 100" />
+
+  <!-- Use depth_image_proc to process synchronized RGB and Depth images -->
+  <!-- <node pkg="nodelet" type="nodelet" name="depth_image_proc" args="load depth_image_proc/point_cloud_xyz" output="screen">
+    <remap from="image" to="/camera/depth_registered/image_rect" />
+    <remap from="camera_info" to="/camera/depth_registered/camera_info" />
+    <param name="queue_size" value="5" />
+  </node> -->
+  <node pkg="nodelet" type="nodelet" name="depth_image_proc" args="load depth_image_proc/point_cloud_xyzrgb standalone_nodelet --no-bond">
+        <remap from="rgb/camera_info" to="/uav1/rgbd/color/camera_info"/>
+        <remap from="rgb/image_rect_color" to="/uav1/rgbd/color/image_raw"/>
+        <!-- <remap from="rgb/image_rect_color" to="/uav1/rgbd/color/modified/image_raw"/> -->
+        <remap from="depth_registered/image_rect" to="/uav1/rgbd/aligned_depth_to_color/image_raw"/>
+        <remap from="depth_registered/points" to="/camera/depth_registered/points"/>
+    </node>
+</launch>
